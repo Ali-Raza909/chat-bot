@@ -143,3 +143,7 @@ def execute_tool(tool_name, tool_args):
         # For any other type, convert using str()
         result = str(result)
     return result
+
+
+load_dotenv() 
+client = anthropic.Anthropic() # to create instance of our anthropic client
