@@ -198,3 +198,22 @@ def process_query(query):
                                                model='claude-sonnet-4-6',
                                                tools=tools,
                                                messages=messages)
+
+
+
+
+def chat_loop():
+    print("Type your queries or 'quit' to exit.")
+    while True:
+        try:
+            query = input("\nQuery: ").strip()
+            if query.lower() == 'quit':
+                break
+    
+            process_query(query)
+            print("\n")
+        except Exception as e:
+            print(f"\nError: {str(e)}")
+
+
+chat_loop()                        
