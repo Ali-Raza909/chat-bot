@@ -1,0 +1,68 @@
+{
+  "2403.05266v3": {
+    "title": "ERBench: An Entity-Relationship based Automatically Verifiable Hallucination Benchmark for Large Language Models",
+    "authors": [
+      "Jio Oh",
+      "Soyeon Kim",
+      "Junseok Seo",
+      "Jindong Wang",
+      "Ruochen Xu",
+      "Xing Xie",
+      "Steven Euijong Whang"
+    ],
+    "summary": "Large language models (LLMs) have achieved unprecedented performances in various applications, yet evaluating them is still challenging. Existing benchmarks are either manually constructed or are automatic, but lack the ability to evaluate the thought process of LLMs with arbitrary complexity. We contend that utilizing existing relational databases based on the entity-relationship (ER) model is a promising approach for constructing benchmarks as they contain structured knowledge that can be used to question LLMs. Unlike knowledge graphs, which are also used to evaluate LLMs, relational databases have integrity constraints that can be used to better construct complex in-depth questions and verify answers: (1) functional dependencies can be used to pinpoint critical keywords that an LLM must know to properly answer a given question containing certain attribute values; and (2) foreign key constraints can be used to join relations and construct multi-hop questions, which can be arbitrarily long and used to debug intermediate answers. We thus propose ERBench, which uses these integrity constraints to convert any database into an LLM benchmark. ERBench supports continuous evaluation as databases change, multimodal questions, and various prompt engineering techniques. In our experiments, we construct LLM benchmarks using databases of multiple domains and make an extensive comparison of contemporary LLMs. We show how ERBench can properly evaluate any LLM by not only checking for answer correctness, but also effectively verifying the rationales by looking for the right keywords.",
+    "pdf_url": "https://arxiv.org/pdf/2403.05266v3",
+    "published": "2024-03-08"
+  },
+  "2609.37267v1": {
+    "title": "Foundations of Proactive Agents: Principles, Technical Layers, and Proactivity-Gym",
+    "authors": [
+      "Jio Oh",
+      "Seunghyun Do",
+      "Young-Jun Lee",
+      "Steven Euijong Whang",
+      "Dongyeop Kang"
+    ],
+    "summary": "Proactive LLM agents can turn idle compute into useful support before users ask. Yet even correct work can misread user context, impose review costs, or undermine trust. This work proposes foundations for designing, realizing, and evaluating proactive LLM agents around three joint principles (3T): Task Capability, anticipating relevant needs and correctly performing useful work; Temporal Allocation, allocating compute according to resource availability and when results are needed; and Trust, sustaining users' confidence and appropriate reliance on the agent. We connect these objectives to a design space organized around five dimensions: task scope, anticipation horizon, activation trigger, processing timing, and intervention depth, and specify the situation and system modeling needed to support its choices, including user and environment representations, backbone LLMs, and agent harnesses. Lastly, we propose PROACTIVITY-GYM, a simulation-based evaluation testbed including multi-day scenarios, stateful environments, and persona-conditioned simulated users that can evaluate the consequences of proactive assistance across interactions. Evaluations across 23 model-harness configurations uncover substantial performance gaps across 3T and reveal that LLM judges often conflate task capability and trust. A human study with 30 participants demonstrates the importance of the joint 3T optimization: participants show sharp trust declines after intervention misalignment despite correct outcomes, and prefer sleep-time assistance, even when imperfect, to preserve ongoing focus. Together, these findings support designing and evaluating proactive agents through the joint consideration of useful work, compute allocation, and evolving user trust.",
+    "pdf_url": "https://arxiv.org/pdf/2609.37267v1",
+    "published": "2026-09-29"
+  },
+  "2601.22888v4": {
+    "title": "DialectLLM: A Dialect-Aware Dialog[ue] Generation Framework Beyond Standard American English",
+    "authors": [
+      "Jio Oh",
+      "Paul Vicinanza",
+      "Thomas Butler",
+      "Steven Euijong Whang",
+      "Dezhi Hong",
+      "Amani Namboori"
+    ],
+    "summary": "More than 80% of the 1.6B English speakers do not use Standard American English (SAE), yet LLMs often fail to correctly identify non-SAE dialects and generate stereotyped responses for their speakers. We introduce DialectLLM, the first large-scale framework for generating high-quality multi-dialectal conversational data encompassing the three pillars of written dialect -- lexical (vocabulary), orthographic (spelling), and morphosyntactic (grammar) features. DialectLLM produces a dialect-parallel dialog dataset spanning nine English dialects. Partnering with native linguists, we design and validate SAE-to-dialect transformation rules, ensuring authenticity. Our approach challenges the prevailing practice of applying a single morphosyntactic feature set to both user utterances and model responses, showing that models should not reproduce up to 90% of the grammatical features of a dialect. Human evaluation confirms data quality, with annotators preferring DialectLLM over prior methods in 98.8% of pairwise comparisons for dialect naturalness. We then construct DialectLLM-Bench, a dialect-parallel benchmark with 50k+ dialogs, resulting in 97k+ QA pairs, and evaluate 17 LLMs on dialect identification and response generation tasks. Even frontier models achieve under 70% accuracy, fail to reach 50% for prominent dialects like Canadian English, and systematically misclassify non-SAE dialects as American or British. Beyond benchmarking, we show that DialectLLM data also serve as a scalable LLM post-training resource, suggesting a practical path toward dialect-aware conversational AI.",
+    "pdf_url": "https://arxiv.org/pdf/2601.22888v4",
+    "published": "2026-01-30"
+  },
+  "2601.06225v2": {
+    "title": "Classroom AI: Large Language Models as Grade-Specific Teachers",
+    "authors": [
+      "Jio Oh",
+      "Steven Euijong Whang",
+      "James Evans",
+      "Jindong Wang"
+    ],
+    "summary": "Large Language Models (LLMs) offer a promising solution to complement traditional teaching and address global teacher shortages that affect hundreds of millions of children, but they fail to provide grade-appropriate responses for students at different educational levels. We introduce a framework for finetuning LLMs to generate age-appropriate educational content across six grade levels, from lower elementary to adult education. Our framework successfully adapts explanations to match students' comprehension capacities without sacrificing factual correctness. This approach integrates seven established readability metrics through a clustering method and builds a comprehensive dataset for grade-specific content generation. Evaluations across multiple datasets with 208 human participants demonstrate substantial improvements in grade-level alignment, achieving a 35.64 percentage point increase compared to prompt-based methods while maintaining response accuracy. AI-assisted learning tailored to different grade levels has the potential to advance educational engagement and equity.",
+    "pdf_url": "https://arxiv.org/pdf/2601.06225v2",
+    "published": "2026-01-09"
+  },
+  "2202.11966v4": {
+    "title": "Impacts of Individual Fairness on Group Fairness from the Perspective of Generalized Entropy",
+    "authors": [
+      "Youngmi Jin",
+      "Jio Gim",
+      "Tae-Jin Lee",
+      "Young-Joo Suh"
+    ],
+    "summary": "This paper investigates how the degree of group fairness changes when the degree of individual fairness is actively controlled. As a metric quantifying individual fairness, we consider generalized entropy (GE) recently introduced into machine learning community. To control the degree of individual fairness, we design a classification algorithm satisfying a given degree of individual fairness through an empirical risk minimization (ERM) with a fairness constraint specified in terms of GE. We show the PAC learnability of the fair ERM problem by proving that the true fairness degree does not deviate much from an empirical one with high probability for finite VC dimension if the sample size is big enough. Our experiments show that strengthening individual fairness degree does not always lead to enhancement of group fairness.",
+    "pdf_url": "https://arxiv.org/pdf/2202.11966v4",
+    "published": "2022-02-24"
+  }
+}

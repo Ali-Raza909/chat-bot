@@ -1,18 +1,23 @@
 import arxiv  #for searching papers
 import json   #for some formatting
 import os  # for env vars
+import requests
 from typing import List
 from dotenv import load_dotenv
-import anthropic  # anthropic SDK for...(why not)
-
+from groq import Groq
 PAPER_DIR = "papers"  # for saving info to the file system
 
-def search_papers(topic: str, max_results: int = 5) -> List[str]:
-   
-    
-    client = arxiv.Client()
 
-   
+class _TimeoutSession(requests.Session):
+    def request(self, method, url, **kwargs):
+        kwargs.setdefault("timeout", (5, 15))
+        return super().request(method, url, **kwargs)
+
+
+def search_papers(topic: str, max_results: int = 5) -> List[str]:
+    client = arxiv.Client(num_retries=0)
+    client._session = _TimeoutSession()
+
     search = arxiv.Search(
         query = topic,
         max_results = max_results,
@@ -20,21 +25,18 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
     )
 
     papers = client.results(search)
-    
-  
+
     path = os.path.join(PAPER_DIR, topic.lower().replace(" ", "_"))
     os.makedirs(path, exist_ok=True)
-    
+
     file_path = os.path.join(path, "papers_info.json")
 
-   
     try:
         with open(file_path, "r") as json_file:
             papers_info = json.load(json_file)
     except (FileNotFoundError, json.JSONDecodeError):
         papers_info = {}
 
-  
     paper_ids = []
     for paper in papers:
         paper_ids.append(paper.get_short_id())
@@ -46,16 +48,13 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
             'published': str(paper.published.date())
         }
         papers_info[paper.get_short_id()] = paper_info
-    
-   
+
     with open(file_path, "w") as json_file:
         json.dump(papers_info, json_file, indent=2)
-    
-    print(f"Results are saved in: {file_path}")
-    
-    return paper_ids
 
-search_papers("computers")
+    print(f"Results are saved in: {file_path}")
+
+    return paper_ids
 
 # func to search for info about a specific paper
 
@@ -78,45 +77,55 @@ def extract_info(paper_id: str) -> str:
     
     return f"There's no saved information related to paper {paper_id}."
 
-extract_info('1312.3300v1') # let's test upar wala function
-
 # tools for searching paper and extracting info bout em
+
 
 tools = [
     {
-        "name": "search_papers",
-        "description": "Search for papers on arXiv based on a topic and store their information.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "topic": {
-                    "type": "string",
-                    "description": "The topic to search for"
-                }, 
-                "max_results": {
-                    "type": "integer",
-                    "description": "Maximum number of results to retrieve",
-                    "default": 5
-                }
-            },
-            "required": ["topic"]
+        "type": "function",
+        "function": {
+            "name": "search_papers",
+            "description": (
+                "Search arXiv papers by topic and save "
+                "their information locally."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "Topic to search for"
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum papers to retrieve"
+                    }
+                },
+                "required": ["topic"]
+            }
         }
     },
     {
-        "name": "extract_info",
-        "description": "Search for information about a specific paper across all topic directories.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "paper_id": {
-                    "type": "string",
-                    "description": "The ID of the paper to look for"
-                }
-            },
-            "required": ["paper_id"]
+        "type": "function",
+        "function": {
+            "name": "extract_info",
+            "description": (
+                "Retrieve saved information about an arXiv paper."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "paper_id": {
+                        "type": "string",
+                        "description": "The arXiv paper ID"
+                    }
+                },
+                "required": ["paper_id"]
+            }
         }
     }
 ]
+
 
 # func to maps our tools to their underline funs 
 
@@ -146,58 +155,68 @@ def execute_tool(tool_name, tool_args):
 
 
 load_dotenv() # for env vars
-client = anthropic.Anthropic() # to create instance of our anthropic client
+client = Groq()
 
 def process_query(query):
-    
-    messages = [{'role': 'user', 'content': query}]
-    
-    response = client.messages.create(max_tokens=2024,
-                                    
-                                       model='claude-sonnet-4-6',
-                                       tools=tools,
-                                       messages=messages)
-    
-    process_query = True
-    while process_query:
-        assistant_content = []
-        tool_results = []
-        has_tool_use = False
+    messages = [
+        {"role": "user", "content": query}
+    ]
 
-        for content in response.content:
-            if content.type == 'text':
-                print(content.text)
-                assistant_content.append(content)
+    # Prevent an endless tool-calling loop
+    for _ in range(10):
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+            max_completion_tokens=2024
+        )
 
-            elif content.type == 'tool_use':
-                has_tool_use = True
-                assistant_content.append(content)
+        assistant_message = response.choices[0].message
 
-                tool_id = content.id
-                tool_args = content.input
-                tool_name = content.name
-                print(f"Calling tool {tool_name} with args {tool_args}")
+        # Preserve the assistant's tool calls in the conversation
+        messages.append(
+            assistant_message.model_dump(exclude_none=True)
+        )
+
+        # If no tools were requested, display the final answer
+        if not assistant_message.tool_calls:
+            if assistant_message.content:
+                print(assistant_message.content)
+            return
+
+        # Execute each requested tool and return its result
+        for tool_call in assistant_message.tool_calls:
+            tool_name = tool_call.function.name
+
+            try:
+                tool_args = json.loads(
+                    tool_call.function.arguments
+                )
+
+                print(
+                    f"Calling tool {tool_name} "
+                    f"with args {tool_args}"
+                )
+
+                if tool_name not in mapping_tool_function:
+                    raise ValueError(
+                        f"Unknown tool: {tool_name}"
+                    )
 
                 result = execute_tool(tool_name, tool_args)
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": tool_id,
-                    "content": result
-                })
 
-        # One assistant message per turn, with ALL content blocks
-        messages.append({'role': 'assistant', 'content': assistant_content})
+            except Exception as e:
+                result = f"Tool execution error: {e}"
 
-        if not has_tool_use:
-            process_query = False
-        else:
-            # One user message with ALL tool_results for that turn
-            messages.append({"role": "user", "content": tool_results})
-            response = client.messages.create(max_tokens=2024,
-                                            
-                                               model='claude-sonnet-4-6',
-                                               tools=tools,
-                                               messages=messages)
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": str(result)
+            })
+
+    print("Stopped: maximum tool-calling iterations reached.")
+
 
 
 
@@ -216,4 +235,5 @@ def chat_loop():
             print(f"\nError: {str(e)}")
 
 
-chat_loop()                        
+if __name__ == "__main__":
+    chat_loop()
