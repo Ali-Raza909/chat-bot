@@ -9,10 +9,10 @@ PAPER_DIR = "papers"  # for saving info to the file system
 
 def search_papers(topic: str, max_results: int = 5) -> List[str]:
    
-    # Use arxiv to find the papers 
+    
     client = arxiv.Client()
 
-    # Search for the most relevant articles matching the queried topic
+   
     search = arxiv.Search(
         query = topic,
         max_results = max_results,
@@ -21,20 +21,20 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
 
     papers = client.results(search)
     
-    # Create directory for this topic
+  
     path = os.path.join(PAPER_DIR, topic.lower().replace(" ", "_"))
     os.makedirs(path, exist_ok=True)
     
     file_path = os.path.join(path, "papers_info.json")
 
-    # Try to load existing papers info
+   
     try:
         with open(file_path, "r") as json_file:
             papers_info = json.load(json_file)
     except (FileNotFoundError, json.JSONDecodeError):
         papers_info = {}
 
-    # Process each paper and add to papers_info  
+  
     paper_ids = []
     for paper in papers:
         paper_ids.append(paper.get_short_id())
@@ -47,7 +47,7 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
         }
         papers_info[paper.get_short_id()] = paper_info
     
-    # Save updated papers_info to json file
+   
     with open(file_path, "w") as json_file:
         json.dump(papers_info, json_file, indent=2)
     
@@ -136,14 +136,65 @@ def execute_tool(tool_name, tool_args):
         result = ', '.join(result)
         
     elif isinstance(result, dict):
-        # Convert dictionaries to formatted JSON strings
+        # convert dictionaries to formatted JSON strings
         result = json.dumps(result, indent=2)
     
     else:
-        # For any other type, convert using str()
+        # for any other type, convert using str()
         result = str(result)
     return result
 
 
-load_dotenv() 
+load_dotenv() # for env vars
 client = anthropic.Anthropic() # to create instance of our anthropic client
+
+def process_query(query):
+    
+    messages = [{'role': 'user', 'content': query}]
+    
+    response = client.messages.create(max_tokens=2024,
+                                    
+                                       model='claude-sonnet-4-6',
+                                       tools=tools,
+                                       messages=messages)
+    
+    process_query = True
+    while process_query:
+        assistant_content = []
+        tool_results = []
+        has_tool_use = False
+
+        for content in response.content:
+            if content.type == 'text':
+                print(content.text)
+                assistant_content.append(content)
+
+            elif content.type == 'tool_use':
+                has_tool_use = True
+                assistant_content.append(content)
+
+                tool_id = content.id
+                tool_args = content.input
+                tool_name = content.name
+                print(f"Calling tool {tool_name} with args {tool_args}")
+
+                result = execute_tool(tool_name, tool_args)
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": tool_id,
+                    "content": result
+                })
+
+        # One assistant message per turn, with ALL content blocks
+        messages.append({'role': 'assistant', 'content': assistant_content})
+
+        if not has_tool_use:
+            process_query = False
+        else:
+            # One user message with ALL tool_results for that turn
+            messages.append({"role": "user", "content": tool_results})
+            response = client.messages.create(max_tokens=2024,
+                                            
+                                               model='claude-sonnet-4-6',
+                                               tools=tools,
+                                               messages=messages)
